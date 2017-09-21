@@ -1,0 +1,8 @@
+/widget-list.lua
+/autostart.lua
+/base-config.lua
+# don't need to version-control it when remove some not necessary layouts
+layouts.lua
+
+# just for now - don't need to store gimp's blobs
+*.xcf
