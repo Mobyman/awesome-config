@@ -68,7 +68,7 @@ globalkeys = awful.util.table.join(
 
     awful.key({ modkey, "Control" }, "n", awful.client.restore),
 
-    awful.key({ }, "#107", function () awful.util.spawn("shutter -s") end),
+    awful.key({ }, "#107", function () awful.util.spawn("flameshot gui") end),
     awful.key({ modkey }, "l", function () awful.util.spawn("gnome-screensaver-command -l") end),
  
     -- Prompt

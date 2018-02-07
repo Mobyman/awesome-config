@@ -3,7 +3,7 @@ local wibox     = require('wibox')
 local beautiful = require('beautiful')
 local wrapper   = require('widget_wrapper')
 
-local notConnectedText = "VPN Off"
+local notConnectedText = "VPN"
 
 local current = nil
 local widgets = {}

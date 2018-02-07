@@ -6,7 +6,7 @@ local stringUtils = require('util.string')
 local naughty = require('naughty')
 local timer = require('timer')
 
-local notConnectedText = "WIFI Off"
+local notConnectedText = "Wi-Fi"
 
 local current = nil
 local widgets = {}
@@ -17,35 +17,61 @@ widgets.label = wibox.widget.imagebox()
 widgets.left  = wibox.widget.imagebox()
 
 local function isActive(id)
-    local h = io.popen("PYTHONIOENCODING=utf-8 wicd-cli -i | grep 'Идентификатор' | awk -F': ' '{ print $2 }'")
-    local result = h:read()
-    h:close()
+    local result = io.popen("PYTHONIOENCODING=utf-8 wicd-cli -i | grep 'Connected to' | awk -F' at ' '{ print $1 }'"):read()
     return result == id
 end
 
 local function getSignal() 
-    local h = io.popen("PYTHONIOENCODING=utf-8 wicd-cli -i | grep -o '[0-9]*%'")
-    local signal = h:read()
-    h:close()
-    return signal  
+    return io.popen("PYTHONIOENCODING=utf-8 wicd-cli -i | grep ' at ' | awk -F'at ' '{ print $2 }' | sed s/dBm.*//"):read()
 end 
 
-local function getPointWithSignal() 
-    if current then
-        return current .. " " .. getSignal()
-    else 
+local function getName() 
+    return io.popen("PYTHONIOENCODING=utf-8 wicd-cli -y -i | grep -oP 'Connected to (\\w|\\d|-)+' | awk '{ print $3 }'"):read()
+end
+
+local function getStatus() 
+    status = io.popen("PYTHONIOENCODING=utf-8 wicd-cli -y -i | grep -P 'Connection status' | awk -F': ' '{ print $2 }'"):read()
+    if status == 'Not connected' then
         return notConnectedText
+    else 
+        return status
     end
+end   
+
+
+local function getPointWithSignal() 
+    current = getName()
+    if not current then
+        return getStatus()
+    end 
+
+    signal = tonumber(getSignal())
+    color = '#FFFFFF'
+    if not signal then
+        color = 'gray'
+    elseif signal <= -70 then
+        color = 'red'
+    elseif signal <= -50 then
+        color = 'orange'
+    elseif signal > -50 then
+        color = 'green'  
+    else
+        color = 'gray'
+    end             
+
+    return "<b>" .. current .. "</b> | <span color='" .. color .."'>" .. signal .. " dBm</span>"
 end
 
 local function getWifiList()
-    local handler = io.popen("wicd-cli --wireless -l | awk '{ print $1 \" |\" $4 }' | tail -n +2")
+    local handler = io.popen("wicd-cli --wireless -l | awk '{ print $4 }' | tail -n +2")
     local result = {}
+    local key = 0
     for line in handler:lines() do
         result[#result + 1] = line
-        if isActive(stringUtils.split(line, " |")[1]) then
-            current = stringUtils.split(line, " |")[2]
+        if isActive(key) then
+            current = line
         end
+        key = key + 1
     end
     handler:close()
     return result
@@ -61,14 +87,13 @@ local function connect(id)
         disconnect()
     end
     awful.util.spawn_with_shell("wicd-cli -y -c -n " .. id)
-    current = name
-    widgets.text:set_text(getPointWithSignal())    
+    widgets.text:set_markup(getPointWithSignal())    
 end
 
-local function createMenuEntry(name)
+local function createMenuEntry(index, name)
     return { name, function ()
-        connect(stringUtils.split(name, " |")[1])
-        widgets.text:set_text(stringUtils.split(name, " |")[2])
+        connect(index)
+        widgets.text:set_text(name)
     end }
 end
 
@@ -76,11 +101,11 @@ local function createMenu()
     local available = getWifiList()
     local result = {}
     for i = 1, #available do
-        result[i] = createMenuEntry(available[i])
+        result[i] = createMenuEntry((i-1), available[i])
     end
     result[#available + 1] = { "Disconnect", function ()
         disconnect()
-        widgets.text:set_text(notConnectedText)
+        widgets.text:set_text(getStatus())
     end }
 
     return awful.menu(result)
@@ -89,9 +114,9 @@ end
 local menu = createMenu()
 
 if current == nil then
-    widgets.text:set_text(notConnectedText)
+    widgets.text:set_text(getStatus())
 else
-    widgets.text:set_text(getPointWithSignal())
+    widgets.text:set_markup_silently(getPointWithSignal())
 end
 
 
@@ -122,8 +147,8 @@ widgets.main:buttons(bindings)
 widgets.left:buttons(bindings)
 widgets.label:buttons(bindings)
 
-wifitimer = timer({ timeout = 5 })
-wifitimer:connect_signal("timeout", function() widgets.text:set_text(getPointWithSignal()) end)
+wifitimer = timer({ timeout = 1 })
+wifitimer:connect_signal("timeout", function() widgets.text:set_markup(getPointWithSignal()) end)
 wifitimer:start()
 
 return {

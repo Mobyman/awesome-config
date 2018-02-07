@@ -3,10 +3,10 @@ local base  = require('base-config')
 local logger = require('util/logger').globalLogger
 local s = {}
 
-s.programm = 'shutter'
+s.programm = 'flameshot'
 s.keys = {}
-s.keys.area = '-s'
-s.keys.window = '-s'
+s.keys.area = 'gui'
+s.keys.window = 'gui'
 s.config = {}
 s.config.pathTemplate = base.screenshotPath .. '/%d.%m.%Y %H:%M:%S (\$wx\$h).png'
 

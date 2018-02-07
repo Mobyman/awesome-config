@@ -135,7 +135,7 @@ local tooltip = awful.tooltip({
         end
         return
             "\n " ..
-                getSongInfo("{Artist} - {Title} \n [{file}]", currentStatus.song)
+                getSongInfo("{Artist} - {Title}", currentStatus.song)
             .. " \n"
     end
 })

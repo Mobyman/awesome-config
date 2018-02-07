@@ -14,10 +14,10 @@ local function htmlSpecialChars(str)
 end
 
 local function formatString(str, data)
-    for key, value in pairs(data) do
-        str = str:gsub('{' .. key .. '}', value)
-    end
-    return str
+   for key, value in pairs(data) do
+       str = str:gsub('{' .. key .. '}', value)
+   end
+   return str
 end
 
 local function split(s, delimiter)
