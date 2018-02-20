@@ -1,0 +1,3 @@
+[submodule "cyclefocus"]
+	path = cyclefocus
+	url = https://github.com/blueyed/awesome-cyclefocus.git

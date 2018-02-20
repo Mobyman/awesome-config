@@ -3,7 +3,7 @@ local wibox     = require('wibox')
 local beautiful = require('beautiful')
 local wrapper   = require('widget_wrapper')
 
-local notConnectedText = "VPN"
+local notConnectedText = " VPN "
 
 local current = nil
 local widgets = {}
@@ -93,7 +93,7 @@ local bindings = awful.util.table.join(
         menu:show()
     end),
     awful.button({}, 2, function ()
-        menu = createMenu()
+        menu:createMenu()
     end),
     awful.button({}, 3, function ()
         menu:show()

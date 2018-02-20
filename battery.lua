@@ -51,14 +51,30 @@ battery.tooltip = awful.tooltip({
 local update = function ()
     local status = {}
     status.fullInfo = io.popen("acpi -b"):read()
-    status.percentage = io.popen("acpi -b | cut -d \" \" -f4 | cut -d \",\" -f1"):read()
+    status.percentage = tonumber(io.popen("acpi -b | cut -d \" \" -f4 | cut -d \",\" -f1 | sed 's/%//'"):read())
     status.remaining = io.popen("acpi -b | cut -d ',' -f3 | cut -d ' ' -f2"):read()
+
+    local percentNumber = status.percentage
+    local color = 'gray'
+
+    if not percentNumber then
+        color = 'gray'
+    elseif  percentNumber > 99 then
+        color = 'white'
+    elseif percentNumber <= 10 then
+        color = 'red'
+    elseif percentNumber <= 15 then
+        color = 'orange'
+    elseif percentNumber >= 16 then
+        color = 'green' 
+    end             
+
+    widgetText = "<span color='" .. color .."'>".. status.percentage .."%</span>"
     if status.fullInfo:match("Charging") then
         battery.private.widgets.label:set_image(beautiful.widgets.battery.charging)
-        battery.private.widgets.text:set_text(status.percentage)
+        battery.private.widgets.text:set_markup(widgetText)
     elseif status.fullInfo:match("Discharging") then
-        battery.private.widgets.text:set_text(status.percentage)
-        local percentNumber = tonumber(string.sub(status.percentage,1,-2))
+        battery.private.widgets.text:set_markup(widgetText)
         if percentNumber < 25 then
             battery.private.widgets.label:set_image(beautiful.widgets.battery.low)
             if percentNumber < 10 then
@@ -70,13 +86,12 @@ local update = function ()
         else
             battery.private.widgets.label:set_image(beautiful.widgets.battery.full)
         end
-        battery.private.widgets.text:set_text(status.percentage)
+        battery.private.widgets.text:set_markup(widgetText)
     else
-        local percentNumber = tonumber(string.sub(status.percentage,1,-2))
         if percentNumber > 75 then
             battery.private.widgets.label:set_image(beautiful.widgets.battery.charging)
         end
-        battery.private.widgets.text:set_text(status.percentage)
+        battery.private.widgets.text:set_markup(widgetText)
     end
 end
 

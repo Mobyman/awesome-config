@@ -16,12 +16,19 @@ widgets.text  = wibox.widget.textbox()
 widgets.label = wibox.widget.imagebox()
 widgets.left  = wibox.widget.imagebox()
 
+widgets.tooltip = awful.tooltip({
+    objects = { widgets.text },
+    timer_function = function ()
+        return "\n" .. ' Signal strength: ' .. getSignal() .. "dBm \n"
+    end
+})
+
 local function isActive(id)
     local result = io.popen("PYTHONIOENCODING=utf-8 wicd-cli -i | grep 'Connected to' | awk -F' at ' '{ print $1 }'"):read()
     return result == id
 end
 
-local function getSignal() 
+function getSignal() 
     return io.popen("PYTHONIOENCODING=utf-8 wicd-cli -i | grep ' at ' | awk -F'at ' '{ print $2 }' | sed s/dBm.*//"):read()
 end 
 
@@ -59,7 +66,7 @@ local function getPointWithSignal()
         color = 'gray'
     end             
 
-    return "<b>" .. current .. "</b> | <span color='" .. color .."'>" .. signal .. " dBm</span>"
+    return " " .. current .. " <span color='" .. color .."'>📶</span> "
 end
 
 local function getWifiList()
@@ -103,9 +110,10 @@ local function createMenu()
     for i = 1, #available do
         result[i] = createMenuEntry((i-1), available[i])
     end
+
     result[#available + 1] = { "Disconnect", function ()
         disconnect()
-        widgets.text:set_text(getStatus())
+        widgets.text:set_markup(getStatus())
     end }
 
     return awful.menu(result)
@@ -147,7 +155,7 @@ widgets.main:buttons(bindings)
 widgets.left:buttons(bindings)
 widgets.label:buttons(bindings)
 
-wifitimer = timer({ timeout = 1 })
+wifitimer = timer({ timeout = 3 })
 wifitimer:connect_signal("timeout", function() widgets.text:set_markup(getPointWithSignal()) end)
 wifitimer:start()
 

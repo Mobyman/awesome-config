@@ -2,6 +2,7 @@ local awful     = require('awful')
 local layouts   = require('layouts')
 local menubar   = require('menubar')
 local beautiful = require('beautiful')
+local cyclefocus = require('cyclefocus')
 
 --menubar.get():set_bg(beautiful.panel)
 
@@ -19,8 +20,8 @@ root.buttons(awful.util.table.join(
 -- Keyboard {{{
 
 globalkeys = awful.util.table.join(
-    awful.key({ modkey },            "Left",   awful.tag.viewprev       ),
-    awful.key({ modkey },            "Right",  awful.tag.viewnext       ),
+    -- awful.key({ modkey },            "Left",   awful.tag.viewprev       ),
+    -- awful.key({ modkey },            "Right",  awful.tag.viewnext       ),
     awful.key({ modkey },            "Escape", awful.tag.history.restore),
     awful.key({ modkey },            "j",
         function ()
@@ -91,6 +92,11 @@ globalkeys = awful.util.table.join(
 
 -- Windows {{{
 
+local wa = screen[mouse.screen].workarea
+ww = wa.width
+wh = wa.height
+ph = 22 -- (panel height)
+
 local clientkeys = awful.util.table.join(
     awful.key({ modkey },            "f",      function (c) c.fullscreen = not c.fullscreen  end),
     awful.key({ modkey, "Shift" },   "c",      function (c) c:kill()                         end),
@@ -110,7 +116,30 @@ local clientkeys = awful.util.table.join(
             c.maximized_horizontal = not c.maximized_horizontal
             c.maximized_vertical   = not c.maximized_vertical
         end
-    )
+    ),
+    -- awful.key({ modkey            }, "Next",     function () awful.client.moveresize( 20,  20, -40, -40) end),
+    -- awful.key({ modkey            }, "Prior",    function () awful.client.moveresize(-20, -20,  40,  40) end),
+    -- awful.key({ modkey            }, "Down",     function () awful.client.moveresize(  0,  20,   0,   0) end),
+    -- awful.key({ modkey            }, "Up",       function () awful.client.moveresize(  0, -20,   0,   0) end),
+    -- awful.key({ modkey            }, "Left",     function () awful.client.moveresize(-20,   0,   0,   0) end),
+    -- awful.key({ modkey            }, "Right",    function () awful.client.moveresize( 20,   0,   0,   0) end),
+    awful.key({ modkey               }, "Left",  function (c) c:geometry( { width = ww / 2, height = wh, x = 0, y = ph } ) end),
+    awful.key({ modkey               }, "Right", function (c) c:geometry( { width = ww / 2, height = wh, x = ww / 2, y = ph } ) end),
+    awful.key({ modkey               }, "Up",    function (c) c:geometry( { width = ww, height = wh / 2, x = 0, y = ph } ) end),
+    awful.key({ modkey               }, "Down",  function (c) c:geometry( { width = ww, height = wh / 2, x = 0, y = wh / 2 + ph } ) end),
+    awful.key({ modkey, "Control" }, "Right", function (c) c:geometry( { width = ww / 2, height = wh / 2, x = ww / 2, y = ph } ) end),
+    awful.key({ modkey, "Control" }, "Left",  function (c) c:geometry( { width = ww / 2, height = wh / 2, x = ww / 2, y = wh / 2 + ph } ) end),
+    awful.key({ modkey, "Control" }, "Up",  function (c) c:geometry( { width = ww / 2, height = wh / 2, x = 0, y = ph } ) end),
+    awful.key({ modkey, "Control" }, "Down",   function (c) c:geometry( { width = ww / 2, height = wh / 2, x = 0, y = wh / 2 + ph } ) end),
+    awful.key({ modkey, "Control" }, "KP_Begin", function (c) c:geometry( { width = ww, height = wh, x = 0, y = ph } ) end),
+    cyclefocus.key({ "Mod1", }, "Tab", 1, {
+    -- cycle_filters as a function callback:
+    -- cycle_filters = { function (c, source_c) return c.screen == source_c.screen end },
+
+    -- cycle_filters from the default filters:
+        cycle_filters = { cyclefocus.filters.same_screen, cyclefocus.filters.common_tag },
+        keys = {'Tab', 'ISO_Left_Tab'}  -- default, could be left out
+    })
 )
 
 -- Bind all key numbers to tags.
